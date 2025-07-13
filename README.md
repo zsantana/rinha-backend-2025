@@ -22,7 +22,7 @@ Construir um serviço dockerizado com Docker Compose contendo:
 - **1 instância do NGINX** como balanceador de carga
 - **1 banco de dados** (Postgres, MySQL ou MongoDB)
 
-Limitação máxima de **1,5 CPU** e **3 GB de RAM** para todos os containers juntos. A aplicação deve atender os endpoints abaixo e enfrentar um teste de carga automatizado (Gatling).
+Limitação máxima de **1,5 CPU** e **350MB de RAM** para todos os containers juntos. A aplicação deve atender os endpoints abaixo e enfrentar um teste de carga automatizado (K6).
 
 ### Endpoints exigidos:
 
