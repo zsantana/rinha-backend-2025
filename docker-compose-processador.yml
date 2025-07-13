@@ -106,8 +106,8 @@ services:
 
 
 networks:
-  # payment-processor:
-  #   external: true
+  payment-processor:
+    external: true
   rinha-net:
     driver: bridge
 
