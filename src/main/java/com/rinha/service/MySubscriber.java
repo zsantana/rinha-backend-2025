@@ -9,8 +9,6 @@ import com.rinha.dto.PaymentRequest;
 
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.pubsub.PubSubCommands;
-import io.quarkus.runtime.Startup;
-import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped

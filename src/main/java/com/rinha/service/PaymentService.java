@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rinha.dto.PaymentRecord;
@@ -27,7 +25,7 @@ import com.rinha.dto.ProcessorSummary;
 @ApplicationScoped
 public class PaymentService {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    // private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
     private static final String PAYMENT_KEY_PREFIX = "payment:";
 
     @Inject
