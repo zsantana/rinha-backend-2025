@@ -18,13 +18,13 @@ ENV JAVA_OPTS="-XX:+AlwaysPreTouch \
   -Dquarkus.vertx.prefer-native-transport=true \
   -Dio.netty.buffer.checkBounds=false \
   -Dmutiny.disableCallBackDecorators=true \
-  -Xss512k \
-  -XX:MetaspaceSize=32M \
-  -XX:MaxMetaspaceSize=64M \
   -XX:+ExitOnOutOfMemoryError \
   -XX:InitialRAMPercentage=50 \
   -XX:MinRAMPercentage=50 \
   -XX:MaxRAMPercentage=75 \
+  -Xss512k \
+  -XX:MetaspaceSize=32M \
+  -XX:MaxMetaspaceSize=64M \
   "
 
 ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]

@@ -6,17 +6,25 @@ services:
       - "6379:6379"
     networks:
       - rinha-net
+    # volumes:
+    #   - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 5s
+    # command: [
+    #   "redis-server",
+    #   "--save", "",
+    #   "--appendonly", "no"
+    #   ]
     deploy:
       resources:
         limits:
-          cpus: "0.3"
+          cpus: "0.5"
           memory: "60MB"
+
   # redisinsight:
   #   image: redislabs/redisinsight
   #   hostname: redisinsight
@@ -27,10 +35,12 @@ services:
 
 
   api01: &api
-    image: 442494/rinha-backend-2025-jvm:latest
+    image: rinha-backend-2025-jvm:latest
     hostname: api01
     networks:
       - rinha-net
+    ports:
+      - "8081:8081"  
     environment:
       - QUARKUS_HTTP_PORT=8081
       - QUARKUS_REDIS_HOST=redis://redis:6379
@@ -46,6 +56,8 @@ services:
     networks:
       - rinha-net
     hostname: api02
+    ports:
+      - "8082:8082"
     environment:
       - QUARKUS_HTTP_PORT=8082
       - QUARKUS_REDIS_HOST=redis://redis:6379
@@ -98,3 +110,6 @@ networks:
   #   external: true
   rinha-net:
     driver: bridge
+
+# volumes:
+#   redis-data:

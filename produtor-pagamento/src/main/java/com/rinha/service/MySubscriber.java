@@ -1,10 +1,11 @@
 package com.rinha.service;
 
-import com.rinha.model.PaymentRequest;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.rinha.dto.PaymentRequest;
 
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.pubsub.PubSubCommands;
