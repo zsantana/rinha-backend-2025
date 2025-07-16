@@ -10,6 +10,7 @@ import com.rinha.dto.PaymentRequest;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.pubsub.PubSubCommands;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 // @Startup 
@@ -19,6 +20,9 @@ public class MySubscriber implements Consumer<PaymentRequest> {
 
     private final PubSubCommands<PaymentRequest> pub;
 
+    @Inject
+    HighPerformancePaymentService highPerformancePaymentService;
+
     public MySubscriber(RedisDataSource ds) {
         pub = ds.pubsub(PaymentRequest.class);
         pub.subscribe("payments", this);
@@ -26,7 +30,8 @@ public class MySubscriber implements Consumer<PaymentRequest> {
 
     @Override
     public void accept(PaymentRequest notification) {
-        LOG.info("### 📥 Mensagem recebida: {} ", notification);
+        // LOG.info("### 📥 Mensagem recebida: {} ", notification);
+        highPerformancePaymentService.processPayment(notification);
     }
 
     // @PreDestroy

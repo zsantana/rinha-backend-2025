@@ -14,23 +14,9 @@ public class DateTimeUtils {
         .optionalStart().appendLiteral('Z').optionalEnd()
         .toFormatter();
 
-    private DateTimeUtils() {
-        // utilitário: evita instanciação
-    }
-
     public static Instant parseToInstant(String dateString) {
-        
-        if (dateString == null) {
-            throw new DateTimeParseException("Date string is null", "", 0);
-        }
-
         try {
-            TemporalAccessor ta = FLEXIBLE_FORMATTER.parseBest(
-                dateString,
-                ZonedDateTime::from,
-                LocalDateTime::from
-            );
-
+            TemporalAccessor ta = FLEXIBLE_FORMATTER.parseBest(dateString, ZonedDateTime::from, LocalDateTime::from);
             if (ta instanceof ZonedDateTime zdt) {
                 return zdt.toInstant();
             } else if (ta instanceof LocalDateTime ldt) {
@@ -38,7 +24,6 @@ public class DateTimeUtils {
             } else {
                 throw new DateTimeParseException("Unknown date-time format", dateString, 0);
             }
-
         } catch (DateTimeParseException e) {
             throw new DateTimeParseException("Failed to parse date-time: " + dateString, dateString, 0);
         }

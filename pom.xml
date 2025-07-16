@@ -33,6 +33,18 @@
   </dependencyManagement>
 
   <dependencies>
+
+  <dependency>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-vertx</artifactId>
+</dependency>
+
+
+  <!-- Virtual Threads Support -->
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-virtual-threads</artifactId>
+    </dependency>
    
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -73,7 +85,7 @@
       <artifactId>quarkus-jackson</artifactId>
     </dependency>
 
-     <dependency>
+     <!-- <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
     </dependency>
@@ -81,7 +93,7 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-health</artifactId>
-    </dependency>
+    </dependency> -->
 
     <dependency>
       <groupId>io.quarkus</groupId>

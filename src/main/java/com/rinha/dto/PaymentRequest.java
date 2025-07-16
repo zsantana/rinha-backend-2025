@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+
 public record PaymentRequest(
     @NotNull
     @JsonProperty("correlationId")
@@ -16,4 +17,11 @@ public record PaymentRequest(
     @Positive
     @JsonProperty("amount")
     BigDecimal amount
-) {}
+) {
+
+    // public String toJson() {
+    //     return "{\"correlationId\":\"" + correlationId + "\",\"amount\":\"" + amount + "\"}";
+    // }
+
+}
+
