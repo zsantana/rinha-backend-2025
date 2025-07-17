@@ -19,15 +19,15 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: "60MB"
+          memory: "25MB"
 
   redisinsight:
     image: redislabs/redisinsight
     hostname: redisinsight
     ports:
     - "5540:5540"
-    networks:
-    - rinha-net
+    # networks:
+    # - rinha-net
 
 
   api01: &api
@@ -47,7 +47,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
+          cpus: "0.50"
           memory: "150MB"
 
   api02:
@@ -81,7 +81,7 @@ services:
       resources:
         limits:
           cpus: "0.2"
-          memory: "50MB"
+          memory: "25MB"
 
 
 networks:

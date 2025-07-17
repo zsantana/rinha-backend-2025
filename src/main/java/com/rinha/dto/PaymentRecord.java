@@ -13,4 +13,8 @@ public record PaymentRecord(
     public enum ProcessorType {
         DEFAULT, FALLBACK
     }
+
+    public String toJson() {
+        return "{\"correlationId\":\"" + correlationId + "\",\"amount\":\"" + amount + "\"}";
+    }
 }

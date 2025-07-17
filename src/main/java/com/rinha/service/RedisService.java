@@ -20,23 +20,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rinha.dto.PaymentRecord;
-import com.rinha.dto.PaymentRecord.ProcessorType;
-import com.rinha.dto.PaymentRequest;
 import com.rinha.dto.PaymentsSummary;
 import com.rinha.dto.ProcessorSummary;
 
 @ApplicationScoped
 public class RedisService {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
-    private static final String PAYMENT_KEY_PREFIX = "payment"; // Removido o ':' extra
+    private static final Logger log = LoggerFactory.getLogger(RedisService.class);
+    private static final String PAYMENT_KEY_PREFIX = "payment";
 
     @Inject
     ReactiveRedisDataSource reactiveRedisDataSource;
 
-  @PostConstruct
+    @PostConstruct
     void checkInjection() {
-          log.info("🔌 Conectando no Redis com: {}", System.getenv("QUARKUS_REDIS_HOSTS"));
+        log.info("🔌 Conectando no Redis com: {}", System.getenv("QUARKUS_REDIS_HOSTS"));
         if (reactiveRedisDataSource == null) {
             log.error("❌ reactiveRedisDataSource não foi injetado!");
         } else {
@@ -45,76 +43,74 @@ public class RedisService {
     }
 
 
-
     public Uni<Void> savePayment(PaymentRecord paymentRecord) {
 
         String key = generateKey(paymentRecord.correlationId());
-        
-        // Serializa o PaymentRecord para JSON antes de salvar
-        String paymentJson = Json.encode(paymentRecord);
 
-        log.info("Payment record key: {}, payload: {}", key, paymentRecord);
+        try {
+            String paymentJson = Json.encode(paymentRecord);
+            log.info("📝 Salvando payment no Redis - Key: {}, Data: {}", key, paymentJson);
 
-        return reactiveRedisDataSource
-            .value(String.class) // Salva como String (JSON)
-            .set(key, paymentJson)
-            .invoke(count -> log.info("📤 Mensagem publicada no REDIS"))
-            .invoke(result -> log.info("✅ Registro salvo com sucesso no Redis: {}", key))
-            .onFailure().invoke(error -> log.error("❌ Falha ao salvar no Redis", error))
-            .onFailure()
-                    .retry().withBackOff(Duration.ofMillis(100), Duration.ofMillis(500))
+            // Inscrição explícita
+            reactiveRedisDataSource
+                .value(String.class)
+                .set(key, paymentJson)
+                .onFailure()
+                    .retry()
+                    .withBackOff(Duration.ofMillis(100), Duration.ofMillis(100))
                     .atMost(3)
-                .replaceWithVoid();
+                .onFailure()
+                    .invoke(error -> log.error("❌ Falha ao salvar no Redis - Key: {}", key, error))
+                .onItem()
+                    .invoke(result -> log.info("✅ Registro salvo com sucesso no Redis: Key={}", key))
+                .subscribe().with(
+                    result -> {}, // sucesso tratado acima
+                    failure -> {} // falha já logada acima
+                );
+
+            return Uni.createFrom().voidItem(); // ignora o retorno porque já foi assinado
+
+        } catch (Exception e) {
+            log.error("❌ Erro ao serializar PaymentRecord - Key: {}", key, e);
+            return Uni.createFrom().failure(e);
+        }
     }
 
-    public Uni<Void> savePayment(PaymentRequest request, ProcessorType processorType) {
 
-        PaymentRecord paymentRecord = new PaymentRecord(
-            UUID.randomUUID(),
-            request.amount(),
-            Instant.now(),
-            processorType
-            
-        );
 
-        String key = generateKey(paymentRecord.correlationId());
-        log.info("Payment record key: {}, payload: {}", key, paymentRecord);
-        
-        // Serializa o PaymentRecord para JSON antes de salvar
-        String paymentJson = Json.encode(paymentRecord);
+    
 
-        return reactiveRedisDataSource
-            .value(String.class) // Salva como String (JSON)
-            .set(key, paymentJson)
-            .onFailure()
-                    .retry().withBackOff(Duration.ofMillis(100), Duration.ofMillis(500))
-                    .atMost(3)
-                .replaceWithVoid();
-
-    }
-
-    public Uni<PaymentsSummary> getPaymentsSummary(Instant from, Instant to) {
+     public Uni<PaymentsSummary> getPaymentsSummary(Instant from, Instant to) {
 
         ReactiveKeyCommands<String> keyCommands = reactiveRedisDataSource.key();
-        log.info("Buscando pagamentos entre {} e {}", from, to);
+        String searchPattern = PAYMENT_KEY_PREFIX + ":*";
+        
+        log.info("🔍 Buscando pagamentos entre {} e {}", from, to);
     
-        return keyCommands.keys(PAYMENT_KEY_PREFIX + ":*") // Usa o prefixo correto
+        return keyCommands.keys(searchPattern)
+            .onItem().invoke(keys -> log.info("🔑 Chaves encontradas: {}", keys.size()))
             .onItem().<String>transformToMulti(keys -> 
                 Multi.createFrom().iterable(keys)
-                    .onItem().transformToUni(
-                        key -> reactiveRedisDataSource.value(String.class).get(key) // Recupera como String (JSON)
+                    .onItem().transformToUni(key -> 
+                        reactiveRedisDataSource.value(String.class).get(key)
                     )
-                    .merge(8) // 👈 controle de concorrência aqui
+                    .merge(8)
             )
-            .onItem().transform(json -> Json.decodeValue(json, PaymentRecord.class))
+            .onItem().transform(json -> {
+                try {
+                    return Json.decodeValue(json, PaymentRecord.class);
+                } catch (Exception e) {
+                    log.error("❌ Erro ao deserializar: {}", json, e);
+                    return null;
+                }
+            })
+            .filter(record -> record != null)
             .filter(record -> !record.requestedAt().isBefore(from) && !record.requestedAt().isAfter(to))
             .collect().asList()
             .onItem().transform(this::calculateSummaries);
     }
-    
 
     private PaymentsSummary calculateSummaries(List<PaymentRecord> records) {
-
         Map<PaymentRecord.ProcessorType, ProcessorSummary> summaries = new HashMap<>();
         summaries.put(PaymentRecord.ProcessorType.DEFAULT, new ProcessorSummary(0, BigDecimal.ZERO));
         summaries.put(PaymentRecord.ProcessorType.FALLBACK, new ProcessorSummary(0, BigDecimal.ZERO));
@@ -130,11 +126,12 @@ public class RedisService {
             summaries.get(PaymentRecord.ProcessorType.DEFAULT),
             summaries.get(PaymentRecord.ProcessorType.FALLBACK)
         );
-
     }
 
     private String generateKey(UUID correlationId) {
-        return PAYMENT_KEY_PREFIX + "::" + correlationId.toString(); // Chave com '::' para consistência
+        // Consistente com o padrão de busca
+        return PAYMENT_KEY_PREFIX + ":" + correlationId.toString();
     }
+    
+    
 }
-
