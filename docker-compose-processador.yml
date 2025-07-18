@@ -14,7 +14,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "10000"]
     deploy:
       resources:
         limits:
@@ -30,25 +30,26 @@ services:
     # - rinha-net
 
 
+  # Produtores ========================================================================
   api01: &api
-    image: rinha-backend-2025-jvm:latest
+    image: rinha-backend-2025-produtor:latest
     hostname: api01
     networks:
       - rinha-net
       - payment-processor
     ports:
-      - "8081:8081"  
+      - "8081:8080"  
     environment:
-      - QUARKUS_HTTP_PORT=8081
+      # - QUARKUS_HTTP_PORT=8080
       - QUARKUS_REDIS_HOST=redis://redis:6379
       - PAYMENT_PROCESSOR_DEFAULT=http://payment-processor-default:8080
       - PAYMENT_PROCESSOR_FALLBACK=http://payment-processor-fallback:8080
-    
+      - QUARKUS_LOG_LEVEL=INFO
     deploy:
       resources:
         limits:
           cpus: "0.50"
-          memory: "150MB"
+          memory: "50MB"
 
   api02:
     <<: *api 
@@ -57,14 +58,38 @@ services:
       - payment-processor
     hostname: api02
     ports:
-      - "8082:8082"
+      - "8082:8080"
     environment:
-      - QUARKUS_HTTP_PORT=8082
+      # - QUARKUS_HTTP_PORT=8080
       - QUARKUS_REDIS_HOST=redis://redis:6379
       - PAYMENT_PROCESSOR_DEFAULT=http://payment-processor-default:8080
       - PAYMENT_PROCESSOR_FALLBACK=http://payment-processor-fallback:8080
+      - QUARKUS_LOG_LEVEL=INFO
+  # Produtores ========================================================================
 
- 
+  # Consumidores ========================================================================
+  api03:
+    image: rinha-backend-2025-consumidor:latest
+    hostname: api03
+    networks:
+      - rinha-net
+      - payment-processor
+    ports:
+      - "8083:8080"  
+    environment:
+      # - QUARKUS_HTTP_PORT=8080
+      - QUARKUS_REDIS_HOST=redis://redis:6379
+      - PAYMENT_PROCESSOR_DEFAULT=http://payment-processor-default:8080
+      - PAYMENT_PROCESSOR_FALLBACK=http://payment-processor-fallback:8080
+      - QUARKUS_LOG_LEVEL=INFO
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "50MB"
+
+  # Consumidores ========================================================================
+
   nginx:
     image: nginx:latest
     networks:
