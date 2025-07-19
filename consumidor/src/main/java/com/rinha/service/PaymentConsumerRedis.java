@@ -10,6 +10,7 @@ import io.quarkus.redis.datasource.pubsub.PubSubCommands;
 import io.quarkus.redis.datasource.pubsub.PubSubCommands.RedisSubscriber;
 
 import io.quarkus.runtime.Startup;
+import io.quarkus.virtual.threads.VirtualThreads;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,7 @@ public class PaymentConsumerRedis implements Consumer<PaymentRequest> {
     }
 
     @Override
+    @VirtualThreads
     public void accept(PaymentRequest notification) {
         try {
             LOG.info("📥 Mensagem recebida do Redis: {}", notification);

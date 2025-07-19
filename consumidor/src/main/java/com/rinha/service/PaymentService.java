@@ -10,6 +10,7 @@ import com.rinha.dto.PaymentRecord;
 import com.rinha.dto.PaymentRequest;
 import com.rinha.exception.PaymentServiceException;
 
+import io.quarkus.virtual.threads.VirtualThreads;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -56,7 +57,7 @@ public class PaymentService {
 
     }
 
-
+    @VirtualThreads
     public void processPaymentDefault(PaymentRequest request)  {
         
         CompletableFuture.runAsync(() -> {
@@ -123,7 +124,7 @@ public class PaymentService {
     private HttpRequest buildHttpRequest(String baseUrl, String body, boolean isFallback) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/payments"))
-                .timeout(Duration.ofMillis(100))
+                .timeout(Duration.ofMillis(connectTimeoutMillis))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();

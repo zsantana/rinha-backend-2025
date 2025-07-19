@@ -9,12 +9,10 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,44 +39,6 @@ public class RedisService {
             log.info("✅ reactiveRedisDataSource injetado com sucesso.");
         }
     }
-
-
-    public Uni<Void> savePayment(PaymentRecord paymentRecord) {
-
-        String key = generateKey(paymentRecord.correlationId());
-
-        try {
-            String paymentJson = Json.encode(paymentRecord);
-            log.info("📝 Salvando payment no Redis - Key: {}, Data: {}", key, paymentJson);
-
-            // Inscrição explícita
-            reactiveRedisDataSource
-                .value(String.class)
-                .set(key, paymentJson)
-                .onFailure()
-                    .retry()
-                    .withBackOff(Duration.ofMillis(100), Duration.ofMillis(100))
-                    .atMost(3)
-                .onFailure()
-                    .invoke(error -> log.error("❌ Falha ao salvar no Redis - Key: {}", key, error))
-                .onItem()
-                    .invoke(result -> log.info("✅ Registro salvo com sucesso no Redis: Key={}", key))
-                .subscribe().with(
-                    result -> {}, // sucesso tratado acima
-                    failure -> {} // falha já logada acima
-                );
-
-            return Uni.createFrom().voidItem(); // ignora o retorno porque já foi assinado
-
-        } catch (Exception e) {
-            log.error("❌ Erro ao serializar PaymentRecord - Key: {}", key, e);
-            return Uni.createFrom().failure(e);
-        }
-    }
-
-
-
-    
 
      public Uni<PaymentsSummary> getPaymentsSummary(Instant from, Instant to) {
 
@@ -127,11 +87,4 @@ public class RedisService {
             summaries.get(PaymentRecord.ProcessorType.FALLBACK)
         );
     }
-
-    private String generateKey(UUID correlationId) {
-        // Consistente com o padrão de busca
-        return PAYMENT_KEY_PREFIX + ":" + correlationId.toString();
-    }
-    
-    
 }

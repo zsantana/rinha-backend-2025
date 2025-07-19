@@ -12,17 +12,15 @@ import com.rinha.dto.PaymentRequest;
 import com.rinha.dto.PaymentResponse;
 import com.rinha.dto.PaymentsSummary;
 import com.rinha.exception.PaymentServiceException;
+import com.rinha.service.PaymentProducerRedis;
 import com.rinha.service.PaymentService;
 import com.rinha.service.RedisService;
-import com.rinha.service.redis.PaymentProducerRedis;
 
 import jakarta.inject.Inject;
-import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import jakarta.ws.rs.core.Response;
-import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-
 import io.smallrye.mutiny.Uni;
 
 @Path("")
@@ -41,25 +39,40 @@ public class PaymentResource {
     @Inject
     RedisService redisService;
 
+    @Inject
+    Validator validator;
+
     
+    // @POST
+    // @Path("/payments")
+    // @Consumes(MediaType.APPLICATION_JSON)
+    // @Produces(MediaType.APPLICATION_JSON)
+    // public Uni<Response> send(@Valid PaymentRequest request) {
+
+    //      return Uni.createFrom()
+    //             .voidItem()
+    //             .invoke(() -> paymentProducerRedis.publish(request))
+    //             .replaceWith(Response.ok().build())
+    //             ;   
+    // }
+
+
     @POST
     @Path("/payments")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> send(@Valid PaymentRequest request) {
+    public Response send2(PaymentRequest request) {
 
-         return Uni.createFrom()
-                .voidItem()
-                .invoke(() -> paymentProducerRedis.publish(request))
-                .replaceWith(Response.ok().build())
-                ;   
+        paymentProducerRedis.publishAsync(request);
+        return Response.ok("ok").build();
     }
+
 
 
     @POST
     @Path("/payments-random")
     // @RunOnVirtualThread
-    public Response sendRandom(@Valid PaymentRequest request) {
+    public Response sendRandom(PaymentRequest request) {
 
         var requestRandom = new PaymentRequest(
             UUID.randomUUID(),
@@ -78,33 +91,10 @@ public class PaymentResource {
                     .entity(new PaymentResponse("ERROR", "INTERNAL_ERROR"))
                     .build();
         }
-
-
         
     }
 
-
-    // @GET
-    // @Path("/payments-summary")
-    // @Produces(MediaType.APPLICATION_JSON)
-    // @RunOnVirtualThread
-    // public Response getPaymentsSummary(@QueryParam("from") String fromStr,
-    //                                    @QueryParam("to") String toStr) {
-
-    //     LOG.info("### getPaymentsSummary: {}, {}", fromStr, toStr);
-
-    //     Instant from = DateTimeUtils.parseToInstant(fromStr);
-    //     Instant to = DateTimeUtils.parseToInstant(toStr);
-
-    //     try {
-    //         PaymentsSummary summary = redisService.getPaymentsSummary(from, to);
-    //         LOG.info("### Resumo de pagamentos: {}, {}, {}", summary, fromStr, toStr);
-    //         return Response.ok(summary).build();
-    //     } catch (Exception e) {
-    //         LOG.error("### Erro ao obter resumo: {}", e.getMessage());
-    //         return Response.serverError().entity("Erro ao obter resumo").build();
-    //     }
-    // }
+    
 
     @GET
     @Path("/payments-summary")
