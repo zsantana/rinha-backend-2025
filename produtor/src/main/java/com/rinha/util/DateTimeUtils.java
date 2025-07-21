@@ -14,6 +14,13 @@ public class DateTimeUtils {
         .optionalStart().appendLiteral('Z').optionalEnd()
         .toFormatter();
 
+    public static Instant parseToInstantNullable(String dateString) {
+        if (dateString == null || dateString.isBlank()) {
+            return null;
+        }
+        return parseToInstant(dateString);
+    }
+
     public static Instant parseToInstant(String dateString) {
         try {
             TemporalAccessor ta = FLEXIBLE_FORMATTER.parseBest(dateString, ZonedDateTime::from, LocalDateTime::from);

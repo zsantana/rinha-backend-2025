@@ -21,13 +21,13 @@ services:
           cpus: "0.5"
           memory: "25MB"
 
-  redisinsight:
-    image: redislabs/redisinsight
-    hostname: redisinsight
-    ports:
-    - "5540:5540"
-    # networks:
-    # - rinha-net
+  # redisinsight:
+  #   image: redislabs/redisinsight
+  #   hostname: redisinsight
+  #   ports:
+  #   - "5540:5540"
+  #   networks:
+  #   - rinha-net
 
 
   # Produtores ========================================================================
@@ -49,7 +49,7 @@ services:
       resources:
         limits:
           cpus: "0.2"
-          memory: "100MB"
+          memory: "150MB"
 
   api02:
     <<: *api 
@@ -86,7 +86,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: "100MB"
+          memory: "150MB"
 
   # Consumidores ========================================================================
 

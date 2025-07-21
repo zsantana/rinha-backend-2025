@@ -2,6 +2,8 @@ package com.rinha.service;
 
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.keys.ReactiveKeyCommands;
+import io.quarkus.virtual.threads.VirtualThreads;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
@@ -40,13 +42,14 @@ public class RedisService {
         }
     }
 
-     public Uni<PaymentsSummary> getPaymentsSummary(Instant from, Instant to) {
+    
+    public Uni<PaymentsSummary> getPaymentsSummary(Instant from, Instant to) {
 
         ReactiveKeyCommands<String> keyCommands = reactiveRedisDataSource.key();
         String searchPattern = PAYMENT_KEY_PREFIX + ":*";
         
         log.info("🔍 Buscando pagamentos entre {} e {}", from, to);
-    
+
         return keyCommands.keys(searchPattern)
             .onItem().invoke(keys -> log.info("🔑 Chaves encontradas: {}", keys.size()))
             .onItem().<String>transformToMulti(keys -> 
@@ -65,7 +68,13 @@ public class RedisService {
                 }
             })
             .filter(record -> record != null)
-            .filter(record -> !record.requestedAt().isBefore(from) && !record.requestedAt().isAfter(to))
+            .filter(record -> {
+                if (record == null) return false;
+                Instant requestedAt = record.requestedAt();
+                boolean afterFrom = (from == null) || !requestedAt.isBefore(from);
+                boolean beforeTo = (to == null) || !requestedAt.isAfter(to);
+                return afterFrom && beforeTo;
+            })
             .collect().asList()
             .onItem().transform(this::calculateSummaries);
     }
