@@ -4,7 +4,6 @@ import java.time.Instant;
 
 import com.rinha.util.DateTimeUtils;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,11 +13,10 @@ import com.rinha.service.PaymentProducerRedis;
 import com.rinha.service.RedisService;
 
 import jakarta.inject.Inject;
-import jakarta.validation.Validator;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import io.quarkus.virtual.threads.VirtualThreads;
+
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.mutiny.Uni;
@@ -30,23 +28,17 @@ public class PaymentResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(PaymentResource.class);
 
-    @ConfigProperty(name = "payment.default.url")
-    String defaultPaymentUrl;
-
     @Inject
     PaymentProducerRedis paymentProducerRedis;
 
     @Inject
     RedisService redisService;
-
-    @Inject
-    Validator validator;
-
     
     @POST
     @Path("/payments")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @RunOnVirtualThread
     public Response send2(PaymentRequest request) {
 
         paymentProducerRedis.publishAsync(request);
@@ -55,11 +47,30 @@ public class PaymentResource {
     }
 
 
+    // @POST
+    // @Path("/payments")
+    // @Consumes(MediaType.APPLICATION_JSON)
+    // @Produces(MediaType.APPLICATION_JSON)
+    // @RunOnVirtualThread
+    // public Uni<Response> send2(PaymentRequest request) {
+
+    //     return paymentProducerRedis.publishAsync2(request)
+    //     .replaceWith(Response.ok("ok").build())
+    //     .onFailure().recoverWithItem(throwable -> {
+    //         // Log do erro (opcional)
+    //         LOG.error("❌ Erro ao publicar pagamento no Redis", throwable);
+    //         return Response.serverError()
+    //                        .entity("Erro ao processar pagamento")
+    //                        .build();
+    //     });
+
+    // }
+
+
     @GET
     @Path("/payments-summary")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Blocking 
     public Uni<PaymentsSummary> getPaymentsSummary(
             @QueryParam("from") String fromStr,
             @QueryParam("to") String toStr) {

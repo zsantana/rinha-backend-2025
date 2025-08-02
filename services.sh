@@ -29,6 +29,8 @@ status_services() {
   echo "📦 Status dos containers (payment-processor):"
   docker compose -f $PAYMENT_PROCESSOR_COMPOSE --project-name payment-processor ps || true
 
+  sleep 1
+
   echo ""
   echo "📦 Status dos containers (produtor-pagamento):"
   docker compose -f $PRODUTOR_PAGAMENTO_COMPOSE --project-name produtor-pagamento ps || true
