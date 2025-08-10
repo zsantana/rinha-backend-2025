@@ -1,5 +1,6 @@
 
-# Rinha de Backend – 2025
+![alt text](image.png)
+# Rinha de Backend – 2025 (Versão Super-saiyajin)
 
 Desafio de backend para aplicações em qualquer linguagem com foco em desempenho, resiliência e automação.
 

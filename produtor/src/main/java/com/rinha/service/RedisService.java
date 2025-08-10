@@ -2,8 +2,6 @@ package com.rinha.service;
 
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.keys.ReactiveKeyCommands;
-import io.quarkus.virtual.threads.VirtualThreads;
-import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
