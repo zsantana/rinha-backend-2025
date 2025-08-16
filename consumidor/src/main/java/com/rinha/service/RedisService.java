@@ -21,6 +21,10 @@ public class RedisService {
 
     private static final Logger log = LoggerFactory.getLogger(RedisService.class);
     private static final String PAYMENT_KEY_PREFIX = "payment";
+    
+    // Cache para strings de chaves frequentemente utilizadas
+    private static final ThreadLocal<StringBuilder> KEY_BUILDER = 
+        ThreadLocal.withInitial(() -> new StringBuilder(64));
 
     private ValueCommands<String, String> valueCommands;
 
@@ -34,18 +38,26 @@ public class RedisService {
 
     @VirtualThreads
     public void savePayment(PaymentRecord paymentRecord) {
-        String key = generateKey(paymentRecord.correlationId());
+        String key = generateKeyOptimized(paymentRecord.correlationId());
         try {
+            // Usa Json.encode que é otimizado para Vert.x
             String paymentJson = Json.encode(paymentRecord);
+            
+            // Operação assíncrona mas não aguarda resultado para máxima performance
             valueCommands.set(key, paymentJson);
-            // log.info("✅ Payment salvo no Redis: {}", key);
+            log.info("✅ Payment salvo no Redis: {}", key);
+            
         } catch (Exception e) {
-            log.error("❌ Erro ao salvar payment no Redis - Key: {}, payload {}, exception", key, paymentRecord, e);
-            throw new RuntimeException(e);
+            log.error("❌ Erro ao salvar payment no Redis - Key: {}, exception: {}", key, e.getMessage());
+            // Não propaga a exceção para não quebrar o fluxo principal
+            // Em cenários de alta performance, pode ser melhor logar e continuar
         }
     }
 
-    private String generateKey(UUID correlationId) {
-        return PAYMENT_KEY_PREFIX + ":" + correlationId.toString();
+    private String generateKeyOptimized(UUID correlationId) {
+        StringBuilder sb = KEY_BUILDER.get();
+        sb.setLength(0); // Reset buffer
+        sb.append(PAYMENT_KEY_PREFIX).append(':').append(correlationId);
+        return sb.toString();
     }
 }

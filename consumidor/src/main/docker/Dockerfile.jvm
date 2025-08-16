@@ -14,17 +14,33 @@ USER 185
 ENV JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager" \
     JAVA_APP_JAR="/deployments/quarkus-run.jar" \
     JAVA_OPTS="\
+  -server \
+  -XX:+UnlockExperimentalVMOptions \
+  -XX:+UseZGC \
   -XX:+AlwaysPreTouch \
+  -XX:+EnableJVMCI \
   -Dquarkus.vertx.prefer-native-transport=true \
   -Dio.netty.buffer.checkBounds=false \
+  -Dio.netty.tryReflectionSetAccessible=true \
+  -Dio.netty.allocator.type=pooled \
+  -Dio.netty.allocator.cacheTrimInterval=600000 \
   -Dmutiny.disableCallBackDecorators=true \
+  -Dvertx.disableHttpHeadersValidation=true \
+  -Dvertx.disableWebsockets=true \
+  -Dvertx.disableTCCL=true \
   -XX:+ExitOnOutOfMemoryError \
-  -XX:InitialRAMPercentage=50 \
-  -XX:MinRAMPercentage=50 \
-  -XX:MaxRAMPercentage=75 \
-  -Xss512k \
+  -XX:InitialRAMPercentage=70 \
+  -XX:MinRAMPercentage=70 \
+  -XX:MaxRAMPercentage=85 \
+  -Xss256k \
   -XX:MetaspaceSize=32M \
-  -XX:MaxMetaspaceSize=64M"
+  -XX:MaxMetaspaceSize=64M \
+  -XX:+UseTransparentHugePages \
+  -XX:+UseCompressedOops \
+  -XX:+UseCompressedClassPointers \
+  -XX:+TieredCompilation \
+  -XX:TieredStopAtLevel=1 \
+  -Djava.security.egd=file:/dev/./urandom"
 
 ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
 

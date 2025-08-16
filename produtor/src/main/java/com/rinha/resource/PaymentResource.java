@@ -1,14 +1,7 @@
 package com.rinha.resource;
 
-import java.time.Instant;
-
-import com.rinha.util.DateTimeUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.rinha.dto.PaymentRequest;
-import com.rinha.dto.PaymentsSummary;
 import com.rinha.service.PaymentProducerRedis;
 import com.rinha.service.RedisService;
 
@@ -17,16 +10,11 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
-import io.smallrye.common.annotation.Blocking;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.mutiny.Uni;
 
 @Path("")
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
 public class PaymentResource {
-
-    private static final Logger LOG = LoggerFactory.getLogger(PaymentResource.class);
 
     @Inject
     PaymentProducerRedis paymentProducerRedis;
@@ -46,43 +34,50 @@ public class PaymentResource {
 
     }
 
+    /**
+     * Endpoint reativo usando multi-thread para publicação no Redis
+     * Retorna Uni<Response> para processamento assíncrono completo
+     */
+    // @POST
+    // @Path("/payments")
+    // @Consumes(MediaType.APPLICATION_JSON)
+    // @Produces(MediaType.APPLICATION_JSON)
+    // public Uni<Response> sendMultiThread(PaymentRequest request) {
+        
+    //     return paymentProducerRedis.publishMultiThread(request)
+    //         .map(v -> Response.ok().entity("{\"status\":\"success\",\"message\":\"Payment published successfully\"}").build())
+    //         .onFailure().recoverWithItem(failure -> 
+    //             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+    //                 .entity("{\"status\":\"error\",\"message\":\"" + failure.getMessage() + "\"}")
+    //                 .build()
+    //         );
+    // }
 
+    /**
+     * Endpoint síncrono usando multi-thread mas aguardando conclusão
+     * Útil quando se precisa garantir que a publicação foi concluída antes de retornar
+     */
     // @POST
     // @Path("/payments")
     // @Consumes(MediaType.APPLICATION_JSON)
     // @Produces(MediaType.APPLICATION_JSON)
     // @RunOnVirtualThread
-    // public Uni<Response> send2(PaymentRequest request) {
-
-    //     return paymentProducerRedis.publishAsync2(request)
-    //     .replaceWith(Response.ok("ok").build())
-    //     .onFailure().recoverWithItem(throwable -> {
-    //         // Log do erro (opcional)
-    //         LOG.error("❌ Erro ao publicar pagamento no Redis", throwable);
-    //         return Response.serverError()
-    //                        .entity("Erro ao processar pagamento")
-    //                        .build();
-    //     });
-
+    // public Response sendSyncMultiThread(PaymentRequest request) {
+        
+    //     try {
+    //         paymentProducerRedis.publishMultiThread(request)
+    //             .await().indefinitely(); // Aguarda conclusão de forma síncrona
+                
+    //         return Response.ok()
+    //             .entity("{\"status\":\"success\",\"message\":\"Payment published and confirmed\"}")
+    //             .build();
+                
+    //     } catch (Exception e) {
+    //         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+    //             .entity("{\"status\":\"error\",\"message\":\"" + e.getMessage() + "\"}")
+    //             .build();
+    //     }
     // }
 
-
-    @GET
-    @Path("/payments-summary")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Uni<PaymentsSummary> getPaymentsSummary(
-            @QueryParam("from") String fromStr,
-            @QueryParam("to") String toStr) {
-
-        LOG.info("### getPaymentsSummary: {}, {}", fromStr, toStr);
-
-        Instant from = DateTimeUtils.parseToInstantNullable(fromStr);
-        Instant to = DateTimeUtils.parseToInstantNullable(toStr);
-
-        return redisService.getPaymentsSummary(from, to)
-                .onItem().invoke(summary -> LOG.info("### Resumo de pagamentos: {}", summary))
-                .onFailure().invoke(e -> LOG.error("### Erro ao obter resumo de pagamentos: {}", e.getMessage()));
-    }
 
 }
