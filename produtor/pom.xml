@@ -97,6 +97,16 @@
   <build>
         <plugins>
             <plugin>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <configuration>
+                    <nativeConfig>
+                    <reflectConfigFile>src/main/resources/reflect-config.json</reflectConfigFile>
+                    </nativeConfig>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <version>${quarkus.platform.version}</version>

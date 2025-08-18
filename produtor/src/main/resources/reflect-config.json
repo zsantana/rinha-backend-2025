@@ -1,0 +1,14 @@
+[
+  {
+    "name": "io.netty.handler.ssl.OpenSsl",
+    "methods": [
+      {"name": "<init>", "parameterTypes": []}
+    ]
+  },
+  {
+    "name": "io.netty.handler.ssl.ReferenceCountedOpenSslEngine", 
+    "methods": [
+      {"name": "<init>", "parameterTypes": []}
+    ]
+  }
+]

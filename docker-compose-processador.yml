@@ -1,107 +1,97 @@
 services:
+  # Redis ========================================================================
   redis:
-    image: redis:7.2-alpine
+    image: redis:7-alpine
     hostname: redis
     ports:
-      - "6379:6379"
+      - "6379:6379"        # Porta TCP exposta para APIs
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 1s
+    # OTIMIZAÇÃO: Configuração Redis para alta performance
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     networks:
       - rinha-net
     volumes:
-      - redis-data:/data
-    command: [
-      "redis-server",
-      "--save", "",
-      "--appendonly", "no",
-      "--databases", "1",
-      "--loglevel", "warning",
-      "--logfile", "/dev/null",
-      "--tcp-keepalive", "60"
-    ]
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      # - redis-data:/data
+    sysctls:
+      # OTIMIZAÇÃO: Network performance
+      - net.core.somaxconn=8192        # Aumentado de 4096
+      # - net.core.netdev_max_backlog=8192
+      # - net.ipv4.tcp_max_syn_backlog=8192
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: "25MB"
+          cpus: "0.4"
+          memory: "35MB"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
 
-  # redisinsight:
-  #   image: redislabs/redisinsight
-  #   hostname: redisinsight
-  #   ports:
-  #   - "5540:5540"
-  #   networks:
-  #   - rinha-net
-
-
-  # Produtores ========================================================================
+  # APIs Produtor ========================================================================
   api01: &api
     image: rinha-backend-2025-produtor:v2
     hostname: api01
     networks:
       - rinha-net
       - payment-processor
-    ports:
-      - "8081:8080"  
+    expose:
+      - "8080"
     environment:
-      # - QUARKUS_HTTP_PORT=8080
+      # - QUARKUS_REDIS_HOST=unix:///var/run/redis/redis.sock
       - QUARKUS_REDIS_HOST=redis://redis:6379
       - PAYMENT_PROCESSOR_DEFAULT=http://payment-processor-default:8080
       - PAYMENT_PROCESSOR_FALLBACK=http://payment-processor-fallback:8080
       - QUARKUS_LOG_LEVEL=INFO
+    depends_on:
+      redis:
+        condition: service_healthy
+    # volumes:
+    #   - redis-socket:/var/run/redis
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: "100MB"
+          cpus: "0.2"
+          memory: "90MB"
 
   api02:
-    <<: *api 
-    networks:
-      - rinha-net
-      - payment-processor
+    <<: *api
     hostname: api02
-    ports:
-      - "8082:8080"
-    environment:
-      # - QUARKUS_HTTP_PORT=8080
-      - QUARKUS_REDIS_HOST=redis://redis:6379
-      - PAYMENT_PROCESSOR_DEFAULT=http://payment-processor-default:8080
-      - PAYMENT_PROCESSOR_FALLBACK=http://payment-processor-fallback:8080
-      - QUARKUS_LOG_LEVEL=INFO
-  # Produtores ========================================================================
 
-  # Consumidores ========================================================================
+  # APIs Consumidor ========================================================================
   api03:
     image: rinha-backend-2025-consumidor:v2
     hostname: api03
     networks:
       - rinha-net
       - payment-processor
-    ports:
-      - "8083:8080"  
+    expose:
+      - "8080"
     environment:
-      # - QUARKUS_HTTP_PORT=8080
+      # - QUARKUS_REDIS_HOST=unix:///var/run/redis/redis.sock
       - QUARKUS_REDIS_HOST=redis://redis:6379
       - PAYMENT_PROCESSOR_DEFAULT=http://payment-processor-default:8080
       - PAYMENT_PROCESSOR_FALLBACK=http://payment-processor-fallback:8080
       - QUARKUS_LOG_LEVEL=INFO
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+    # volumes:
+    #   - redis-socket:/var/run/redis
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: "100MB"
 
-
-  # Consumidores ========================================================================
-
+  # Nginx ========================================================================
   nginx:
-    image: nginx:latest
+    image: nginx:alpine
     hostname: nginx
     networks:
       - rinha-net
@@ -110,15 +100,20 @@ services:
     depends_on:
       - api01
       - api02
+      - api03
     ports:
-      - "9999:9999"
-     
+      - "9999:9999"   # externa 9999 → interna 80
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: "25MB"
-
+          cpus: "0.2"
+          memory: "35MB"
+    sysctls:
+      - net.core.somaxconn=8192
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535      
 
 networks:
   payment-processor:
@@ -126,5 +121,5 @@ networks:
   rinha-net:
     driver: bridge
 
-volumes:
-  redis-data:
+# volumes:
+#   redis-data:
