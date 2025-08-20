@@ -35,7 +35,7 @@ services:
 
   # APIs Produtor ========================================================================
   api01: &api
-    image: rinha-backend-2025-produtor:v2
+    image: rinha-backend-2025-produtor:v7
     hostname: api01
     networks:
       - rinha-net
@@ -47,7 +47,7 @@ services:
       - QUARKUS_REDIS_HOST=redis://redis:6379
       - PAYMENT_PROCESSOR_DEFAULT=http://payment-processor-default:8080
       - PAYMENT_PROCESSOR_FALLBACK=http://payment-processor-fallback:8080
-      - QUARKUS_LOG_LEVEL=INFO
+      - QUARKUS_LOG_LEVEL=OFF
     depends_on:
       redis:
         condition: service_healthy
@@ -65,7 +65,7 @@ services:
 
   # APIs Consumidor ========================================================================
   api03:
-    image: rinha-backend-2025-consumidor:v2
+    image: rinha-backend-2025-consumidor:v7
     hostname: api03
     networks:
       - rinha-net
@@ -77,7 +77,7 @@ services:
       - QUARKUS_REDIS_HOST=redis://redis:6379
       - PAYMENT_PROCESSOR_DEFAULT=http://payment-processor-default:8080
       - PAYMENT_PROCESSOR_FALLBACK=http://payment-processor-fallback:8080
-      - QUARKUS_LOG_LEVEL=INFO
+      - QUARKUS_LOG_LEVEL=OFF
     depends_on:
       redis:
         condition: service_healthy

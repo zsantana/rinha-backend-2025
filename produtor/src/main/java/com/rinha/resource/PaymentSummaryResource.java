@@ -31,13 +31,13 @@ public class PaymentSummaryResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<PaymentsSummary> getPaymentsSummary(
-            @QueryParam("from") String fromStr,
-            @QueryParam("to") String toStr) {
+            @QueryParam("from") String inicio,
+            @QueryParam("to") String fim) {
 
-        LOG.info("### getPaymentsSummary: {}, {}", fromStr, toStr);
+        LOG.info("### getPaymentsSummary: {}, {} (Reactive)", inicio, fim);
 
-        Instant from = DateTimeUtils.parseToInstantNullable(fromStr);
-        Instant to = DateTimeUtils.parseToInstantNullable(toStr);
+        Instant from = DateTimeUtils.parseToInstantNullable(inicio);
+        Instant to = DateTimeUtils.parseToInstantNullable(fim);
 
         return redisService.getPaymentsSummary(from, to)
                 .onItem().invoke(summary -> LOG.info("### Resumo de pagamentos: {}", summary))

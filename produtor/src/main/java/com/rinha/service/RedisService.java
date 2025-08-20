@@ -55,7 +55,7 @@ public class RedisService {
                     .onItem().transformToUni(key -> 
                         reactiveRedisDataSource.value(String.class).get(key)
                     )
-                    .merge(8)
+                    .merge(32)
             )
             .onItem().transform(json -> {
                 try {

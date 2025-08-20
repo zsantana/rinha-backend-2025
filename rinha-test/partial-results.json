@@ -1,21 +1,21 @@
 {
-  "timestamp": "2025-08-18T00:42:19.635Z",
+  "timestamp": "2025-08-19T00:10:47.652Z",
   "participante": "anonymous",
-  "total_liquido": 152705.1375,
-  "total_bruto": 214323,
-  "total_taxas": 10716.15,
+  "total_liquido": 156719.0471,
+  "total_bruto": 214243.4,
+  "total_taxas": 10712.17,
   "descricao": "'total_liquido' é sua pontuação final. Equivale ao seu lucro. Fórmula: total_liquido + (total_liquido * p99.bonus) - (total_liquido * multa.porcentagem)",
   "p99": {
-    "valor": "6.04ms",
-    "bonus": "10%",
+    "valor": "5.23ms",
+    "bonus": "12%",
     "max_requests": 500,
     "descricao": "Fórmula para o bônus: max((11 - p99.valor) * 0.02, 0)"
   },
   "multa": {
     "porcentagem": 0.35,
-    "total": 71262.3975,
+    "total": 71235.9305,
     "composicao": {
-      "num_inconsistencias": 118,
+      "num_inconsistencias": 125,
       "descricao": "Se 'num_inconsistencias' > 0, há multa de 35%."
     }
   },
@@ -24,20 +24,20 @@
     "descricao": "Se 'lag' for negativo, significa que seu backend registrou mais pagamentos do que solicitado, automaticamente desclassificando sua submissão!"
   },
   "lag": {
-    "num_pagamentos_total": 10770,
-    "num_pagamentos_solicitados": 15199,
-    "lag": 4429,
+    "num_pagamentos_total": 10766,
+    "num_pagamentos_solicitados": 15201,
+    "lag": 4435,
     "descricao": "Lag é a diferença entre a quantidade de solicitações de pagamentos e o que foi realmente computado pelo backend. Mostra a perda de pagamentos possivelmente por estarem enfileirados."
   },
   "pagamentos_solicitados": {
-    "qtd_sucesso": 15199,
+    "qtd_sucesso": 15201,
     "qtd_falha": 0,
     "descricao": "'qtd_sucesso' foram requests bem sucedidos para 'POST /payments' e 'qtd_falha' os requests com erro."
   },
   "pagamentos_realizados_default": {
-    "total_bruto": 214323,
-    "num_pagamentos": 10770,
-    "total_taxas": 10716.15,
+    "total_bruto": 214243.4,
+    "num_pagamentos": 10766,
+    "total_taxas": 10712.17,
     "descricao": "Informações do backend sobre solicitações de pagamento para o Payment Processor Default."
   },
   "pagamentos_realizados_fallback": {
