@@ -43,10 +43,20 @@ public class PaymentConsumerRedis implements Consumer<PaymentRequest> {
     @VirtualThreads
     public void accept(PaymentRequest notification) {
         try {
-            LOG.info("📥 Mensagem recebida do Redis: {}", notification);
-            paymentService.processPaymentDefault(notification);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("📥 Mensagem recebida do Redis: {}", notification);
+            }
+            
+            // Processamento assíncrono para não bloquear o subscriber
+            paymentService.processPaymentDefault(notification)
+                .exceptionally(throwable -> {
+                    LOG.error("❌ Erro ao processar mensagem Redis de forma assíncrona: {}", throwable.getMessage());
+                    return null;
+                });
+                
         } catch (Exception e) {
-            LOG.error("❌ Erro ao processar mensagem Redis", e);
+            LOG.error("❌ Erro crítico ao processar mensagem Redis: {}", e.getMessage());
+            // Não propaga exceção para não quebrar o subscriber
         }
     }
 
